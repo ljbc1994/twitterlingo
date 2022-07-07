@@ -11,7 +11,7 @@ export type Translation = {
   targetLangText: string;
   sourceLangCode: string;
   targetLangCode: string;
-  status: string;
+  completed: boolean;
 };
 
 type TranslationItem = {
@@ -19,7 +19,7 @@ type TranslationItem = {
   sk: `translation#${Translation["id"]}`;
 };
 
-const skToId = (sk: TranslationItem["sk"]): Translation["id"] => sk.replace(/^note#/, "");
+const skToId = (sk: TranslationItem["sk"]): Translation["id"] => sk.replace(/^translation#/, "");
 const idToSk = (id: Translation["id"]): TranslationItem["sk"] => `translation#${id}`;
 
 export async function getTranslation({
@@ -28,7 +28,7 @@ export async function getTranslation({
 }: Pick<Translation, "id" | "userId">): Promise<Translation | null> {
   const db = await arc.tables();
 
-  const result = await await db.translation.get({ pk: userId, sk: idToSk(id) });
+  const result = await db.translation.get({ pk: userId, sk: idToSk(id) });
 
   if (result) {
     return {
@@ -39,9 +39,10 @@ export async function getTranslation({
       targetLangText: result.targetLangText,
       sourceLangCode: result.sourceLangCode,
       targetLangCode: result.targetLangCode,
-      status: result.status,
+      completed: result.completed,
     };
   }
+
   return null;
 }
 
@@ -63,36 +64,56 @@ export async function getTranslationListItems({
     targetLangText: item.targetLangText,
     sourceLangCode: item.sourceLangCode,
     targetLangCode: item.targetLangCode,
-    status: item.status,
+    completed: item.completed,
   }));
 }
 
-export async function createTranslation(translation: Exclude<Translation, "id">): Promise<Translation> {
+export async function createTranslation(translation: Omit<Translation, "id">): Promise<Translation> {
   const db = await arc.tables();
 
-  const result = await db.note.put({
+  const result = await db.translation.put({
     pk: translation.userId,
     sk: idToSk(cuid()),
+    bookmarkId: translation.bookmarkId,
     sourceLangText: translation.sourceLangText,
     targetLangText: translation.targetLangText,
     sourceLangCode: translation.sourceLangCode,
     targetLangCode: translation.targetLangCode,
-    status: translation.status,
+    completed: translation.completed,
   });
 
   return {
     id: skToId(result.sk),
     userId: result.pk,
     bookmarkId: result.bookmarkId,
-    sourceLangText: translation.sourceLangText,
-    targetLangText: translation.targetLangText,
-    sourceLangCode: translation.sourceLangCode,
-    targetLangCode: translation.targetLangCode,
-    status: translation.status,
+    sourceLangText: result.sourceLangText,
+    targetLangText: result.targetLangText,
+    sourceLangCode: result.sourceLangCode,
+    targetLangCode: result.targetLangCode,
+    completed: result.completed,
   };
 }
 
-export async function deleteBookmark({ id, userId }: Pick<Translation, "id" | "userId">) {
+export async function setCompleteTranslation(
+  userId: User["id"],
+  translationId: Translation['id']
+) {
+  try {
+    const db = await arc.tables();
+
+    await db.translation.put({
+      pk: userId,
+      sk: idToSk(translationId),
+      complete: true,
+    });
+
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+export async function deleteTranslation({ id, userId }: Pick<Translation, "id" | "userId">) {
   const db = await arc.tables();
   return db.note.delete({ pk: userId, sk: idToSk(id) });
 }

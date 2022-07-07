@@ -6,6 +6,7 @@ import type { OAuth2Profile } from "~/auth/TwitterOAuth2Strategy";
 export type User = {
   id: string;
   email: string;
+  sourceLangPreference: string;
 };
 
 export interface SessionUser extends User {
@@ -27,6 +28,7 @@ export async function getUserById(id: User["id"]): Promise<User | null> {
     return {
       id: record.pk,
       email: record.email,
+      sourceLangPreference: record.sourceLangPreference,
     };
   }
   return null;
@@ -113,6 +115,27 @@ export async function findOrCreateFromTwitter({
       profile,
     });
     return getUserData(newUser);
+  }
+}
+
+export async function setSourceLangPreference(
+  userId: User["id"],
+  sourceLang: string
+) {
+  const db = await arc.tables();
+  let user = await getUserById(`id#${userId}`);
+
+  try {
+    if (user) {
+      await db.user.put({
+        pk: `id#${userId}`,
+        sourceLangPreference: sourceLang,
+      });
+      return true;
+    }
+    return false;
+  } catch (err) {
+    return false;
   }
 }
 

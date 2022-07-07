@@ -12,7 +12,6 @@ const region = process.env.AWS_TRANSLATE_REGION
 export async function getTranslationForLanguage(options: GetTranslationOptions): Promise<string | undefined> {
     try {
         const credentials = fromNodeProviderChain({
-            //providerId: 'sandbox',
             profile: 'sandbox',
         });
 

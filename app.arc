@@ -19,6 +19,6 @@ note
   pk *String  # userId
   sk **String # noteId
 
-bookmark
+translation
   pk *String  # userId
   sk **String # bookmarkId
