@@ -7,6 +7,7 @@ import {
 import { getUserById } from "~/models/user.server";
 import { getTranslationForLanguage } from "./translator.server";
 import { getBookmarksByUser } from "./twitter.server";
+import sanitizeTweet from "~/utils/sanitizeTweet";
 
 export interface BookmarkTranslation extends Translation {}
 
@@ -40,7 +41,7 @@ export async function getTranslationsByUser(
             id: null as unknown as string,
             bookmarkId: item.id,
             userId: userId,
-            sourceLangText: item.text,
+            sourceLangText: sanitizeTweet(item.text),
             targetLangText: "",
             sourceLangCode: item.lang,
             targetLangCode: user?.sourceLangPreference ?? "en",
