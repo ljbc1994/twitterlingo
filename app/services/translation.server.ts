@@ -1,7 +1,10 @@
 import type { Translation } from "~/models/translation.server";
-import { createTranslation } from "~/models/translation.server";
-import { getTranslationListItems } from "~/models/translation.server";
-import { getUserById, SessionUser } from "~/models/user.server";
+import type { SessionUser } from "~/models/user.server";
+import {
+  createTranslation,
+  getTranslationListItems,
+} from "~/models/translation.server";
+import { getUserById } from "~/models/user.server";
 import { getTranslationForLanguage } from "./translator.server";
 import { getBookmarksByUser } from "./twitter.server";
 
@@ -17,8 +20,10 @@ export async function getTranslationsByUser(
       accessToken
     );
 
-    const user = await getUserById(userId)
-    const translations = await getTranslationListItems(userId);
+    const [user, translations] = await Promise.all([
+      getUserById(userId),
+      getTranslationListItems(userId),
+    ]);
 
     if (!Array.isArray(twitterBookmarks)) {
       return [];
@@ -31,20 +36,23 @@ export async function getTranslationsByUser(
         );
 
         if (!translation) {
-          return {
+          const convert: BookmarkTranslation = {
+            id: null as unknown as string,
             bookmarkId: item.id,
             userId: userId,
             sourceLangText: item.text,
-            targetLangText: '',
+            targetLangText: "",
             sourceLangCode: item.lang,
-            targetLangCode: user?.sourceLangPreference || 'en',
+            targetLangCode: user?.sourceLangPreference ?? "en",
             completed: false,
           };
+
+          return convert;
         }
 
         return translation;
       })
-      .filter(Boolean) as unknown as BookmarkTranslation[];
+      .filter((item) => item != null);
   } catch (err) {
     throw err;
   }
@@ -53,10 +61,10 @@ export async function getTranslationsByUser(
 export async function createTranslationForUser(
   userId: SessionUser["id"],
   options: {
-    sourceLangText: string,
-    sourceLangCode: string,
-    targetLangCode: string,
-    bookmarkId: string
+    sourceLangText: string;
+    sourceLangCode: string;
+    targetLangCode: string;
+    bookmarkId: string;
   }
 ) {
   try {
@@ -64,7 +72,7 @@ export async function createTranslationForUser(
       sourceLangCode: options.sourceLangCode,
       targetLangCode: options.targetLangCode,
       text: options.sourceLangText,
-    })
+    });
 
     if (targetLangText != undefined) {
       return await createTranslation({
@@ -77,8 +85,8 @@ export async function createTranslationForUser(
         userId,
       });
     }
-  
-    throw new Error('Failed to get target lang');
+
+    throw new Error("Failed to get target language");
   } catch (err) {
     throw err;
   }

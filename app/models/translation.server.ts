@@ -19,8 +19,31 @@ type TranslationItem = {
   sk: `translation#${Translation["id"]}`;
 };
 
+interface DatabaseTranslationItem extends TranslationItem {
+  bookmarkId: string;
+  userId: User["id"];
+  sourceLangText: string;
+  targetLangText: string;
+  sourceLangCode: string;
+  targetLangCode: string;
+  completed: boolean;
+}
+
 const skToId = (sk: TranslationItem["sk"]): Translation["id"] => sk.replace(/^translation#/, "");
 const idToSk = (id: Translation["id"]): TranslationItem["sk"] => `translation#${id}`;
+
+function mapFromDatabaseToModel(dbModel: DatabaseTranslationItem): Translation {
+  return {
+    id: skToId(dbModel.sk),
+    userId: dbModel.pk,
+    bookmarkId: dbModel.bookmarkId,
+    sourceLangText: dbModel.sourceLangText,
+    targetLangText: dbModel.targetLangText,
+    sourceLangCode: dbModel.sourceLangCode,
+    targetLangCode: dbModel.targetLangCode,
+    completed: dbModel.completed,
+  };
+}
 
 export async function getTranslation({
   id,
@@ -31,16 +54,7 @@ export async function getTranslation({
   const result = await db.translation.get({ pk: userId, sk: idToSk(id) });
 
   if (result) {
-    return {
-      userId: result.pk,
-      id: result.sk,
-      bookmarkId: result.bookmarkId,
-      sourceLangText: result.sourceLangText,
-      targetLangText: result.targetLangText,
-      sourceLangCode: result.sourceLangCode,
-      targetLangCode: result.targetLangCode,
-      completed: result.completed,
-    };
+    return mapFromDatabaseToModel(result);
   }
 
   return null;
@@ -54,16 +68,7 @@ export async function getTranslationListItems(userId: Translation['userId']): Pr
     ExpressionAttributeValues: { ":pk": userId },
   });
 
-  return result.Items.map((item: any) => ({
-    id: skToId(item.sk),
-    userId: item.pk,
-    bookmarkId: item.bookmarkId,
-    sourceLangText: item.sourceLangText,
-    targetLangText: item.targetLangText,
-    sourceLangCode: item.sourceLangCode,
-    targetLangCode: item.targetLangCode,
-    completed: item.completed,
-  }));
+  return result.Items.map((item: DatabaseTranslationItem) => mapFromDatabaseToModel(item));
 }
 
 export async function createTranslation(translation: Omit<Translation, "id">): Promise<Translation> {
@@ -80,16 +85,7 @@ export async function createTranslation(translation: Omit<Translation, "id">): P
     completed: translation.completed,
   });
 
-  return {
-    id: skToId(result.sk),
-    userId: result.pk,
-    bookmarkId: result.bookmarkId,
-    sourceLangText: result.sourceLangText,
-    targetLangText: result.targetLangText,
-    sourceLangCode: result.sourceLangCode,
-    targetLangCode: result.targetLangCode,
-    completed: result.completed,
-  };
+  return mapFromDatabaseToModel(result);
 }
 
 export async function setCompleteTranslation(
