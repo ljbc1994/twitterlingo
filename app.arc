@@ -15,10 +15,6 @@ user
 password
   pk *String # userId
 
-note
-  pk *String  # userId
-  sk **String # noteId
-
 translation
   pk *String  # userId
   sk **String # bookmarkId
