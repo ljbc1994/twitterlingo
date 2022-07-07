@@ -5,7 +5,6 @@ import {
   json,
   redirect
 } from "@remix-run/server-runtime";
-import createDebug from "debug";
 import type {
   AuthenticateOptions,
   StrategyVerifyCallback} from "remix-auth";

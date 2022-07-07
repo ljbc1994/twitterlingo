@@ -1,5 +1,5 @@
 @app
-dummy-twitter-895b
+twitterlingo-895b
 
 @http
 /*
@@ -18,3 +18,7 @@ password
 note
   pk *String  # userId
   sk **String # noteId
+
+bookmark
+  pk *String  # userId
+  sk **String # bookmarkId
