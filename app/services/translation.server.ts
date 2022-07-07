@@ -2,7 +2,6 @@ import type { Translation } from "~/models/translation.server";
 import { createTranslation } from "~/models/translation.server";
 import { getTranslationListItems } from "~/models/translation.server";
 import { getUserById, SessionUser } from "~/models/user.server";
-import { getUser } from "./session.server";
 import { getTranslationForLanguage } from "./translator.server";
 import { getBookmarksByUser } from "./twitter.server";
 
