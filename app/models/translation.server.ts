@@ -46,9 +46,7 @@ export async function getTranslation({
   return null;
 }
 
-export async function getTranslationListItems({
-  userId,
-}: Pick<Translation, "userId">): Promise<Array<Translation>> {
+export async function getTranslationListItems(userId: Translation['userId']): Promise<Array<Translation>> {
   const db = await arc.tables();
 
   const result = await db.translation.query({

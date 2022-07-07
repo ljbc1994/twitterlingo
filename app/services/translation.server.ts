@@ -1,7 +1,8 @@
 import type { Translation } from "~/models/translation.server";
 import { createTranslation } from "~/models/translation.server";
 import { getTranslationListItems } from "~/models/translation.server";
-import type { SessionUser } from "~/models/user.server";
+import { getUserById, SessionUser } from "~/models/user.server";
+import { getUser } from "./session.server";
 import { getTranslationForLanguage } from "./translator.server";
 import { getBookmarksByUser } from "./twitter.server";
 
@@ -17,7 +18,12 @@ export async function getTranslationsByUser(
       accessToken
     );
 
-    const translations = await getTranslationListItems({ userId });
+    const user = await getUserById(userId)
+    const translations = await getTranslationListItems(userId);
+
+    if (!Array.isArray(twitterBookmarks)) {
+      return [];
+    }
 
     return twitterBookmarks
       .map((item) => {
@@ -32,7 +38,7 @@ export async function getTranslationsByUser(
             sourceLangText: item.text,
             targetLangText: '',
             sourceLangCode: item.lang,
-            targetLangCode: '',
+            targetLangCode: user?.sourceLangPreference || 'en',
             completed: false,
           };
         }
