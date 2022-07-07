@@ -2,7 +2,7 @@ import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import type { BookmarkTranslation } from "~/services/translation.server";
 import { redirect } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useActionData, useTransition } from "@remix-run/react";
+import { Form, useActionData, useLoaderData, useTransition } from "@remix-run/react";
 import { getTranslation } from "~/models/translation.server";
 
 import { getUser } from "~/services/session.server";
@@ -26,11 +26,12 @@ export let action: ActionFunction = async ({ request }) => {
 };
 
 export default function Translate() {
+  const data = useLoaderData() as LoaderData;
   const transition = useTransition();
   const actionData = useActionData();
   
   return (
-    <div>
+    <Form>
       <div>
         <div>
           <button>Back</button>
@@ -46,7 +47,8 @@ export default function Translate() {
       </div>
 
       <div>
-        <p></p>
+        <p>{data.translation?.sourceLangText}</p>
+        <p>{data.translation?.targetLangText}</p>
       </div>
 
       <div></div>
@@ -54,8 +56,8 @@ export default function Translate() {
       <div></div>
 
       <div>
-        <button>Check</button>
+        <input type="submit" value="Check" />
       </div>
-    </div>
+    </Form>
   );
 }
