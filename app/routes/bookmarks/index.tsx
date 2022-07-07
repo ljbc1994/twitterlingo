@@ -35,7 +35,7 @@ export let action: ActionFunction = async ({ request }) => {
       targetLangCode: user?.sourceLangPreference || "en",
       sourceLangText: text,
     });
-    throw new Error(JSON.stringify(result))
+    // throw new Error(JSON.stringify(result))
   }
 
   return redirect(`/bookmarks`);
