@@ -33,12 +33,13 @@ export let action: ActionFunction = async ({ request }) => {
   const bookmarkId = form.get("bookmarkId") as string;
   const text = form.get("text") as string;
   const sourceLangCode = form.get("sourceLangCode") as string;
+  const targetLangCode = form.get("targetLangCode") as string;
 
   if (id == null || id == "") {
     const result = await createTranslationForUser(user!.id, {
       bookmarkId,
       sourceLangCode: sourceLangCode,
-      targetLangCode: user?.sourceLangPreference || "en",
+      targetLangCode: targetLangCode ?? user?.sourceLangPreference,
       sourceLangText: text,
     });
     return redirect(`/translate/${result.id}`);
@@ -126,6 +127,7 @@ export default function Dashboard() {
               {translations.map((translation) => (
                 <TranslationItem
                   translation={translation}
+                  targetLang={sourceLangPreference}
                   key={translation.bookmarkId}
                 />
               ))}
