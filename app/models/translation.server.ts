@@ -95,9 +95,23 @@ export async function setCompleteTranslation(
   try {
     const db = await arc.tables();
 
+    const translation = await getTranslation({ 
+      id: translationId,
+      userId 
+    })
+
+    if (translation == null) {
+      return false;
+    }
+
     await db.translation.put({
       pk: userId,
       sk: idToSk(translationId),
+      bookmarkId: translation.bookmarkId,
+      sourceLangText: translation.sourceLangText,
+      targetLangText: translation.targetLangText,
+      sourceLangCode: translation.sourceLangCode,
+      targetLangCode: translation.targetLangCode,
       complete: true,
     });
 
