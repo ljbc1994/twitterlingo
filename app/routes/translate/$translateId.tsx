@@ -11,9 +11,13 @@ import {
   setCompleteTranslation,
 } from "~/models/translation.server";
 import { getUser } from "~/services/session.server";
+import TranslationItem from "~/components/dashboard/TranslationItem";
+import { SessionUser } from "~/models/user.server";
+import { languages } from "~/constants/languages";
 
 type LoaderData = {
   translation: Awaited<ReturnType<typeof getTranslation>>;
+  user: SessionUser | null;
 };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -22,7 +26,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     userId: user!.id,
     id: params.translateId!,
   });
-  return json<LoaderData>({ translation: translation! });
+  return json<LoaderData>({ translation: translation!, user });
 };
 
 export let action: ActionFunction = async ({ request }) => {
@@ -47,16 +51,10 @@ export default function Translate() {
   const data = useLoaderData() as LoaderData;
   const actionData = useActionData();
 
-  const { translation } = data;
+  const { translation, user } = data;
 
-  const {
-    id,
-    userId,
-    sourceLangCode,
-    sourceLangText,
-    targetLangCode,
-    targetLangText,
-  } = translation!;
+  const { id, userId, sourceLangCode, targetLangCode, targetLangText } =
+    translation!;
 
   const targetLangTextSplitString: string[] = targetLangText.split(" ");
 
@@ -66,8 +64,15 @@ export default function Translate() {
 
   const [targetLangTextInput, setTargetLangTextInput] = useState<string>("");
 
-  const isSubmissionEnabled =
-    targetLangTextInput.length === targetLangText.length;
+  function getLanguageNameFromLangCode(langCode: string) {
+    const [language] = languages.filter(function (l) {
+      return l.langCode === langCode;
+    });
+    return language.name;
+  }
+
+  const sourceLangAlt = getLanguageNameFromLangCode(sourceLangCode);
+  const targetLangAlt = getLanguageNameFromLangCode(targetLangCode);
 
   useEffect(() => {
     setTargetLangTextInputArray([]);
@@ -75,116 +80,139 @@ export default function Translate() {
   }, [actionData]);
 
   return (
-    <Form method="post">
-      <div>
-        <div>
-          {/* <Link to={`/translate:${}`}>Prev</Link> */}
-          <div>
-            <span>{sourceLangCode}</span>
-            <span>&gt;</span>
-            <span>{targetLangCode}</span>
+    <div className="relative min-h-screen bg-blue-900">
+      <nav className="container mx-auto flex">
+        <div className="flex w-full bg-blue-900 p-4">
+          <div className="align-center flex w-full justify-between">
+            <div>
+              <img
+                className="rounded-full"
+                src={user?.profile?.photos?.[0].value ?? ""}
+                alt="twitter profile"
+              />
+            </div>
+            <div className="flex">
+              <div className="mr-3 self-center">
+                <img
+                  className="rounded-md"
+                  src={`/_static/icons/${sourceLangCode}.svg`}
+                  alt={sourceLangAlt}
+                />
+              </div>
+              <div className="mr-3 self-center">
+                <img
+                  className="rounded-md"
+                  src={`/_static/icons/${targetLangCode}.svg`}
+                  alt={targetLangAlt}
+                />
+              </div>
+            </div>
           </div>
-          {/* <Link to={`/translate:${}`}>Next</Link> */}
         </div>
-        <div>
-          <Link to="/dashboard">Return to dashboard</Link>
-        </div>
-      </div>
+      </nav>
 
-      <div className="px-6 pt-4 pb-2">
-        <div className="cursor-pointer rounded-md bg-blue-800 p-6 font-semibold hover:bg-blue-700">
-          <p className="text-white">{sourceLangText}</p>
-        </div>
-      </div>
-
-      <div className="px-6 pt-4 pb-2">
-        {targetLangTextInputArray.map(function (word, idx) {
-          return (
-            <span
-              key={idx}
-              className="mr-2 mb-2 inline-block rounded-full bg-blue-700 px-3 py-1 text-sm font-semibold text-white hover:cursor-pointer hover:bg-blue-500 hover:text-white"
-              onClick={function () {
-                setTargetLangTextInputArray(function (prevState) {
-                  const newArray = [
-                    ...prevState.filter(function (item) {
-                      return item !== word;
-                    }),
-                  ];
-                  setTargetLangTextInput(newArray.join(" "));
-                  return newArray;
-                });
-              }}
-            >
-              {word}
-            </span>
-          );
-        })}
-      </div>
-
-      <div className="px-6 pt-4 pb-2">
-        {targetLangTextSplitString.map(function (word, idx) {
-          return (
-            <span
-              key={idx}
-              className="mr-2 mb-2 inline-block rounded-full bg-gray-200 px-3 py-1 text-sm font-semibold text-gray-700 hover:cursor-pointer hover:bg-blue-700 hover:text-white"
-              onClick={() => {
-                setTargetLangTextInputArray(function (prevState) {
-                  if (prevState.includes(word)) {
-                    return prevState;
-                  }
-
-                  const newArray = [...prevState, word];
-                  setTargetLangTextInput(newArray.join(" "));
-                  return newArray;
-                });
-                setTargetLangTextInput(targetLangTextInputArray.join(" "));
-              }}
-            >
-              {word}
-            </span>
-          );
-        })}
-      </div>
-
-      {actionData && (
+      <main className="container mx-auto px-4">
         <div className="px-6 pt-4 pb-2">
-          <div
-            className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
-            role="alert"
-          >
-            <strong className="font-bold">That's not correct!</strong>
-            <span className="block sm:inline">Please try again.</span>
-            <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
-              <svg
-                className="h-6 w-6 fill-current text-red-500"
-                role="button"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <title>Close</title>
-                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
-              </svg>
-            </span>
+          <div className="grid gap-3">
+            <TranslationItem
+              key={id}
+              translation={translation!}
+              targetLang={targetLangCode}
+            />
           </div>
         </div>
-      )}
 
-      <div className="px-6 pt-4 pb-2">
-        <input type="hidden" name="userId" value={userId} />
-        <input type="hidden" name="translationId" value={id} />
-        <input type="hidden" name="targetLangText" value={targetLangText} />
-        <input
-          type="hidden"
-          name="targetLangTextInput"
-          value={targetLangTextInput}
-        />
-        <input
-          type="submit"
-          className="diabled:text-gray-700 w-full rounded-full bg-blue-500 py-2 px-4 font-bold text-white hover:cursor-pointer hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-700"
-          value="Check"
-          disabled={!isSubmissionEnabled}
-        />
-      </div>
-    </Form>
+        <div className="px-6 pt-4 pb-2">
+          {targetLangTextInputArray.map(function (word, idx) {
+            return (
+              <span
+                key={idx}
+                className="mr-2 mb-2 inline-block rounded-full rounded-md bg-blue-800  px-3 py-1 text-sm text-white hover:cursor-pointer hover:bg-blue-700"
+                onClick={function () {
+                  setTargetLangTextInputArray(function (prevState) {
+                    const newArray = [
+                      ...prevState.filter(function (item, _idx) {
+                        // return prevState[idx] !== prevState[_idx];
+                        return item !== word;
+                      }),
+                    ];
+                    setTargetLangTextInput(newArray.join(" "));
+                    return newArray;
+                  });
+                }}
+              >
+                {word}
+              </span>
+            );
+          })}
+        </div>
+
+        <div className="px-6 pt-4 pb-2">
+          {targetLangTextSplitString.map(function (word, idx) {
+            return (
+              <span
+                key={idx}
+                className={`${
+                  targetLangTextInputArray.includes(word, idx)
+                    ? "hidden"
+                    : "inline-block"
+                } mr-2 mb-2 inline-block rounded-full rounded-md bg-gray-200  px-3 py-1 text-sm text-gray-700 hover:cursor-pointer hover:bg-blue-700 hover:text-white`}
+                onClick={() => {
+                  setTargetLangTextInputArray(function (prevState) {
+                    if (prevState.includes(word, idx)) {
+                      return prevState;
+                    }
+
+                    const newArray = [...prevState, word];
+                    setTargetLangTextInput(newArray.join(" "));
+                    return newArray;
+                  });
+                }}
+              >
+                {word}
+              </span>
+            );
+          })}
+        </div>
+
+        <Form method="post">
+          {actionData && (
+            <div className="px-6 pt-4 pb-2">
+              <div className="cursor-pointer rounded-md bg-red-800 px-4 py-3 hover:bg-blue-700">
+                <div className="flex">
+                  <div>
+                    <p className="text-white">
+                      That's not correct. Please try again.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="px-6 pt-4 pb-2">
+            <input type="hidden" name="userId" value={userId} />
+            <input type="hidden" name="translationId" value={id} />
+            <input type="hidden" name="targetLangText" value={targetLangText} />
+            <input
+              type="hidden"
+              name="targetLangTextInput"
+              value={targetLangTextInput}
+            />
+            <input
+              type="submit"
+              className="w-full rounded-full bg-blue-500 py-2 px-4 text-white hover:cursor-pointer hover:bg-blue-700"
+              value="Check"
+            />
+            <Link
+              className="mx-auto w-full px-4 text-white hover:underline"
+              to="/dashboard"
+            >
+              Return to dashboard
+            </Link>
+          </div>
+        </Form>
+      </main>
+    </div>
   );
 }
