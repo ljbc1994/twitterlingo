@@ -1,37 +1,3 @@
-<<<<<<< HEAD
-import type { ActionFunction, LoaderFunction } from "@remix-run/node";
-import type { BookmarkTranslation } from "~/services/translation.server";
-import { redirect } from "@remix-run/node";
-import { json } from "@remix-run/node";
-import { Form, useActionData, useLoaderData, useTransition } from "@remix-run/react";
-import { getTranslation } from "~/models/translation.server";
-
-import { getUser } from "~/services/session.server";
-
-type LoaderData = {
-  translation: BookmarkTranslation;
-};
-
-export const loader: LoaderFunction = async ({ request, params }) => {
-  const user = await getUser(request);
-  const translation = await getTranslation({
-    userId: user!.id,
-    id: params.translateId!,
-  });
-  return json<LoaderData>({ translation: translation! });
-};
-
-export let action: ActionFunction = async ({ request }) => {
-  const user = await getUser(request);
-  return redirect(`/dashboard`);
-};
-
-export default function Translate() {
-  const data = useLoaderData() as LoaderData;
-  const transition = useTransition();
-  const actionData = useActionData();
-  
-=======
 import { useState } from "react";
 import { Link, useLoaderData } from "@remix-run/react";
 import { json, LoaderFunction } from "@remix-run/server-runtime";
@@ -74,7 +40,6 @@ export default function Translate() {
 
   const [target, setTarget] = useState<string[]>([]);
 
->>>>>>> 26e0763... Update translateId page with word activity logic
   return (
     <Form>
       <div>
@@ -93,12 +58,7 @@ export default function Translate() {
       </div>
 
       <div>
-<<<<<<< HEAD
-        <p>{data.translation?.sourceLangText}</p>
-        <p>{data.translation?.targetLangText}</p>
-=======
         <p>{sourceLangText}</p>
->>>>>>> 26e0763... Update translateId page with word activity logic
       </div>
 
       <div>
