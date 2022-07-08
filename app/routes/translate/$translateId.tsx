@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import {
   ActionFunction,
@@ -32,15 +32,15 @@ export let action: ActionFunction = async ({ request }) => {
   const targetLangText = form.get("targetLangText") as string;
   const targetLangTextInput = form.get("targetLangTextInput") as string;
 
-  // if (targetLangTextInput === targetLangText) {
-  return await setCompleteTranslation(userId, translationId).then(function () {
-    return redirect(`/dashboard`);
-  });
-  // }
-  // return json(targetLangTextInput === targetLangText, {
-  //   status: 500,
-  //   statusText: targetLangTextInput,
-  // });
+  if (targetLangTextInput === targetLangText) {
+    return await setCompleteTranslation(userId, translationId).then(
+      function () {
+        return redirect(`/dashboard`);
+      }
+    );
+  }
+
+  return json(true);
 };
 
 export default function Translate() {
@@ -69,7 +69,10 @@ export default function Translate() {
   const isSubmissionEnabled =
     targetLangTextInput.length === targetLangText.length;
 
-  console.log({ actionData });
+  useEffect(() => {
+    setTargetLangTextInputArray([]);
+    setTargetLangTextInput("");
+  }, [actionData]);
 
   return (
     <Form method="post">
@@ -88,8 +91,10 @@ export default function Translate() {
         </div>
       </div>
 
-      <div className="cursor-pointer rounded-md bg-blue-800 px-4 py-3 hover:bg-blue-700">
-        <p className="text-white">{sourceLangText}</p>
+      <div className="px-6 pt-4 pb-2">
+        <div className="cursor-pointer rounded-md bg-blue-800 p-6 font-semibold hover:bg-blue-700">
+          <p className="text-white">{sourceLangText}</p>
+        </div>
       </div>
 
       <div className="px-6 pt-4 pb-2">
@@ -141,9 +146,28 @@ export default function Translate() {
         })}
       </div>
 
-      <div>
-        <p>{actionData?.status}</p>
-      </div>
+      {actionData && (
+        <div className="px-6 pt-4 pb-2">
+          <div
+            className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+            role="alert"
+          >
+            <strong className="font-bold">That's not correct!</strong>
+            <span className="block sm:inline">Please try again.</span>
+            <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
+              <svg
+                className="h-6 w-6 fill-current text-red-500"
+                role="button"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <title>Close</title>
+                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
+              </svg>
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="px-6 pt-4 pb-2">
         <input type="hidden" name="userId" value={userId} />
