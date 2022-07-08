@@ -86,14 +86,15 @@ export default function Dashboard() {
               <img className="rounded-full" src={data.user?.profile?.photos?.[0].value ?? ''} alt="twitter profile" />
             </div>
             <div className="flex">
-              <div>
-
+              <div className="self-center mr-3">
+                <img className="rounded-md" src={`/_static/icons/${sourceLangPreference.toUpperCase()}.svg`} />
               </div>
               <select
                 className="rounded-md border border-blue-400 px-3 py-2 self-center bg-blue-900 text-blue-300"
                 name="preferredLanguage"
                 defaultValue={sourceLangPreference}
                 onChange={onPreferredLanguageChange}
+                style={{ width: '125px' }}
               >
                 <option>Please select a language...</option>
                 {languages.map(function ({ name, langCode }) {
@@ -111,10 +112,10 @@ export default function Dashboard() {
       
       <main className="container mx-auto px-4">
         <div className="py-4 grid gap-2 grid-cols-2">
-          <button className="text-blue-200 p-2 hover:bg-blue-800 rounded-md" onClick={() => setShowCompleted(false)}>
+          <button className={`text-blue-200 p-2 hover:bg-blue-800 rounded-md ${!showCompleted && 'bg-blue-700'}`} onClick={() => setShowCompleted(false)}>
             Todo 👀
           </button>
-          <button className="text-blue-200 p-2 hover:bg-blue-800 rounded-md" onClick={() => setShowCompleted(true)}>
+          <button className={`text-blue-200 p-2 hover:bg-blue-800 rounded-md ${showCompleted && 'bg-blue-700'}`} onClick={() => setShowCompleted(true)}>
             Done ✅
           </button>
         </div>
