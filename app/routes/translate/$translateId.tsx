@@ -1,38 +1,41 @@
 import { useState } from "react";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Form, Link, useLoaderData } from "@remix-run/react";
 import { json, LoaderFunction } from "@remix-run/server-runtime";
 import { getTranslation } from "~/models/translation.server";
 import { getUser } from "~/services/session.server";
 
-// type LoaderData = {
-//   translation: Awaited<ReturnType<typeof getTranslation>>;
-// };
+type LoaderData = {
+  translation: Awaited<ReturnType<typeof getTranslation>>;
+};
 
-// export const loader: LoaderFunction = async ({ request }) => {
-//   const user = await getUser(request);
-//   const translation = await getTranslation(user!.id, user!.accessToken);
-
-//   return json<LoaderData>({ translation });
-// };
+export const loader: LoaderFunction = async ({ request, params }) => {
+  const user = await getUser(request);
+  const translation = await getTranslation({
+    userId: user!.id,
+    id: params.translateId!,
+  });
+  return json<LoaderData>({ translation: translation! });
+};
 
 export default function Translate() {
-  // const data = useLoaderData() as LoaderData;
-  const data = {
-    translation: {
-      bookmarkId: "1544768821873020930",
-      completed: false,
-      id: null,
-      sourceLangCode: "en",
-      sourceLangText:
-        "Votre muscle le plus fort et votre pire ennemi est votre esprit. Entraînez-le bien.",
-      targetLangCode: "fr",
-      targetLangText:
-        "Your strongest muscle and worst enemy is your mind. Train it well.",
-      userId: "id#1540354283811610626",
-    },
-  };
+  const data = useLoaderData() as LoaderData;
+  // const data = {
+  //   translation: {
+  //     bookmarkId: "1544768821873020930",
+  //     completed: false,
+  //     id: null,
+  //     sourceLangCode: "en",
+  //     sourceLangText:
+  //       "Votre muscle le plus fort et votre pire ennemi est votre esprit. Entraînez-le bien.",
+  //     targetLangCode: "fr",
+  //     targetLangText:
+  //       "Your strongest muscle and worst enemy is your mind. Train it well.",
+  //     userId: "id#1540354283811610626",
+  //   },
+  // };
 
   const { translation } = data;
+  console.log({ translation });
   const { sourceLangCode, sourceLangText, targetLangCode, targetLangText } =
     translation;
 
@@ -73,6 +76,15 @@ export default function Translate() {
                 color: "white",
                 border: "2px solid blue",
                 borderRadius: "4px",
+              }}
+              onClick={function () {
+                setTarget(function (prevState) {
+                  return [
+                    ...prevState.filter(function (item) {
+                      return item !== word;
+                    }),
+                  ];
+                });
               }}
             >
               {word}
