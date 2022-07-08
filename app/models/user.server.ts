@@ -43,6 +43,7 @@ export async function createTwitterUser({
   await db.user.put({
     pk: `id#${profile.id}`,
     email: "",
+    sourceLangPreference: 'en',
   });
 
   const user = await getUserById(`id#${profile.id}`);

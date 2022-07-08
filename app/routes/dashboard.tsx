@@ -1,9 +1,10 @@
 import { ActionFunction, LoaderFunction, redirect } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, Link, Outlet, useLoaderData } from "@remix-run/react";
+import { Form, Link, Outlet, useLoaderData, useSubmit } from "@remix-run/react";
 import { useMemo, useState } from "react";
 import { languages } from "~/constants/languages";
 import { Translation } from "~/models/translation.server";
+import { SessionUser } from "~/models/user.server";
 
 import { getUser } from "~/services/session.server";
 import {
@@ -13,13 +14,14 @@ import {
 
 type LoaderData = {
   translations: Awaited<ReturnType<typeof getTranslationsByUser>>;
+  user: SessionUser | null
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await getUser(request);
   const translations = await getTranslationsByUser(user!.id, user!.accessToken);
 
-  return json<LoaderData>({ translations });
+  return json<LoaderData>({ translations, user });
 };
 
 export let action: ActionFunction = async ({ request }) => {
@@ -63,7 +65,9 @@ const TranslationItem = ({ translation }: { translation: Translation }) => {
 
 export default function Dashboard() {
   const data = useLoaderData() as LoaderData;
+  
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
+  const [sourceLangPreference, setSourceLangPreference] = useState<string>(data.user!.sourceLangPreference)
 
   const translations = useMemo(() => {
     if (showCompleted) {
@@ -72,32 +76,46 @@ export default function Dashboard() {
     return data.translations.filter((translation) => !translation.completed);
   }, [showCompleted]);
 
+  async function onPreferredLanguageChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    try {
+      await fetch('/user/preference', { 
+        method: 'POST', 
+        body: JSON.stringify({ sourceLangPreference: event.target.value }),
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      setSourceLangPreference(event.target.value)
+    } catch (err) {
+      
+    }
+  }
+
   return (
     <div>
       <div>
         <div>
           <button>My Account</button>
         </div>
-        <div>
-          <select>
-            <option>Please select a language...</option>
-            {languages.map(function ({ name, langCode }) {
-              return (
-                <option key={langCode} value={langCode}>
-                  {name}
-                </option>
-              );
-            })}
-          </select>
-        </div>
+        <select className="p-2 border rounded-md" name="preferredLanguage" defaultValue={sourceLangPreference} onChange={onPreferredLanguageChange}>
+          <option>Please select a language...</option>
+          {languages.map(function ({ name, langCode }) {
+            return (
+              <option key={langCode} value={langCode}>
+                {name}
+              </option>
+            );
+          })}
+        </select>
       </div>
 
+
+      <div>
+        <button onClick={() => setShowCompleted(false)}>To-do</button>
+        <button onClick={() => setShowCompleted(true)}>Completed</button>
+      </div>
       {data.translations.length > 0 ? (
         <div>
-          <div>
-            <button onClick={() => setShowCompleted(false)}>To-do</button>
-            <button onClick={() => setShowCompleted(true)}>Completed</button>
-          </div>
           <hr />
           <div>
             {translations.map((translation) => (
