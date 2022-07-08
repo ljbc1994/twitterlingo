@@ -35,13 +35,17 @@ export default function Translate() {
   // };
 
   const { translation } = data;
-  console.log({ translation });
+
   const { sourceLangCode, sourceLangText, targetLangCode, targetLangText } =
-    translation;
+    translation!;
 
   const targetLangTextSplitString: string[] = targetLangText.split(" ");
 
   const [target, setTarget] = useState<string[]>([]);
+
+  const isSubmissionEnabled = target.length === targetLangText.length;
+
+  function handleSubmit() {}
 
   return (
     <Form>
@@ -125,7 +129,7 @@ export default function Translate() {
       </div>
 
       <div>
-        <input type="submit" value="Check" />
+        <input type="submit" value="Check" disabled={!isSubmissionEnabled} />
       </div>
     </Form>
   );
