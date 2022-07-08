@@ -31,7 +31,7 @@ export let action: ActionFunction = async ({ request }) => {
   const text = form.get("text") as string;
   const sourceLangCode = form.get("sourceLangCode") as string;
 
-  if (id == null || id == '') {
+  if (id == null || id == "") {
     const result = await createTranslationForUser(user!.id, {
       bookmarkId,
       sourceLangCode: sourceLangCode,
@@ -48,26 +48,18 @@ const TranslationItem = ({ translation }: { translation: Translation }) => {
   return (
     <Form method="post">
       <input type="hidden" name="id" value={translation.id} />
-      <input
-        type="hidden"
-        name="bookmarkId"
-        value={translation.bookmarkId}
-      />
+      <input type="hidden" name="bookmarkId" value={translation.bookmarkId} />
       <input
         type="hidden"
         name="sourceLangCode"
         value={translation.sourceLangCode}
       />
-      <input
-        type="hidden"
-        name="text"
-        value={translation.sourceLangText}
-      />
+      <input type="hidden" name="text" value={translation.sourceLangText} />
       {translation.sourceLangText}
       <input type="submit" value="Submit" />
     </Form>
-  )
-}
+  );
+};
 
 export default function Dashboard() {
   const data = useLoaderData() as LoaderData;
@@ -75,10 +67,10 @@ export default function Dashboard() {
 
   const translations = useMemo(() => {
     if (showCompleted) {
-      return data.translations.filter((translation) => translation.completed)
+      return data.translations.filter((translation) => translation.completed);
     }
-    return data.translations.filter((translation) => !translation.completed)
-  }, [showCompleted])
+    return data.translations.filter((translation) => !translation.completed);
+  }, [showCompleted]);
 
   return (
     <div>
@@ -100,20 +92,25 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {translations.length > 0 ? (
+      {data.translations.length > 0 ? (
         <div>
           <div>
             <button onClick={() => setShowCompleted(false)}>To-do</button>
             <button onClick={() => setShowCompleted(true)}>Completed</button>
           </div>
           <hr />
-        <div>
-          {translations.map((translation) => (
-            <TranslationItem translation={translation} key={translation.bookmarkId} />
-          ))}
+          <div>
+            {translations.map((translation) => (
+              <TranslationItem
+                translation={translation}
+                key={translation.bookmarkId}
+              />
+            ))}
+          </div>
         </div>
-        </div>
-      ) : <div>No bookmarks saved. You can bookmark a tweet to see it here.</div>}
+      ) : (
+        <div>No bookmarks saved. You can bookmark a tweet to see it here.</div>
+      )}
     </div>
   );
 }
