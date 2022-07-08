@@ -2,6 +2,7 @@ import { ActionFunction, LoaderFunction, redirect } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, Link, Outlet, useLoaderData } from "@remix-run/react";
 import { useMemo, useState } from "react";
+import { languages } from "~/constants/languages";
 import { Translation } from "~/models/translation.server";
 
 import { getUser } from "~/services/session.server";
@@ -88,21 +89,31 @@ export default function Dashboard() {
         <div>
           <select>
             <option>Please select a language...</option>
+            {languages.map(function ({ name, langCode }) {
+              return (
+                <option key={langCode} value={langCode}>
+                  {name}
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>
-      <div>
+
+      {translations.length > 0 ? (
         <div>
-          <button onClick={() => setShowCompleted(false)}>To-do</button>
-          <button onClick={() => setShowCompleted(true)}>Completed</button>
-        </div>
-        <hr />
+          <div>
+            <button onClick={() => setShowCompleted(false)}>To-do</button>
+            <button onClick={() => setShowCompleted(true)}>Completed</button>
+          </div>
+          <hr />
         <div>
           {translations.map((translation) => (
             <TranslationItem translation={translation} key={translation.bookmarkId} />
           ))}
         </div>
-      </div>
+        </div>
+      ) : <div>No bookmarks saved. You can bookmark a tweet to see it here.</div>}
     </div>
   );
 }
