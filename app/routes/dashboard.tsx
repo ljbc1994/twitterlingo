@@ -51,44 +51,48 @@ export default function Dashboard() {
           </select>
         </div>
       </div>
-      <div>
+
+      {translations.length > 0 ? (
         <div>
-          <button onClick={() => setShowCompleted(false)}>To-do</button>
-          <button onClick={() => setShowCompleted(true)}>Completed</button>
+          <div>
+            <button onClick={() => setShowCompleted(false)}>To-do</button>
+            <button onClick={() => setShowCompleted(true)}>Completed</button>
+          </div>
+          <hr />
+          <div>
+            {showCompleted ? (
+              <div>
+                <p>Here are your completed translations.</p>
+                <ul>
+                  {completedTranslations.map(function () {
+                    return <li>t</li>;
+                  })}
+                </ul>
+              </div>
+            ) : (
+              <div>
+                <p>Here are your pending translations.</p>{" "}
+                <ul>
+                  {pendingTranslations.map(function ({ sourceLangText }) {
+                    return (
+                      <li>
+                        <p>{sourceLangText}</p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
-        <hr />
-        <div>
-          {showCompleted ? (
-            <div>
-              <p>Here are your completed translations.</p>
-              <ul>
-                {completedTranslations.map(function () {
-                  return <li>t</li>;
-                })}
-              </ul>
-            </div>
-          ) : (
-            <div>
-              <p>Here are your pending translations.</p>{" "}
-              <ul>
-                {pendingTranslations.map(function ({ sourceLangText }) {
-                  return (
-                    <li>
-                      <p>{sourceLangText}</p>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-        </div>
+      ) : (
         <div>
           <p>
             You don't have any translations. Bookmark a tweet on from Twitter
             feed to get started.
           </p>
         </div>
-      </div>
+      )}
     </div>
   );
 }
