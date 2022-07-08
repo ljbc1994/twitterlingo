@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Form, Link, useLoaderData } from "@remix-run/react";
+import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
 import {
   ActionFunction,
   json,
@@ -32,17 +32,20 @@ export let action: ActionFunction = async ({ request }) => {
   const targetLangText = form.get("targetLangText") as string;
   const targetLangTextInput = form.get("targetLangTextInput") as string;
 
-  console.log({ targetLangText, targetLangTextInput });
-  if (targetLangTextInput === targetLangText) {
-    await setCompleteTranslation(userId, translationId).then(function () {
-      return redirect(`/dashboard`);
-    });
-  }
-  return redirect(`/translate/${translationId}`);
+  // if (targetLangTextInput === targetLangText) {
+  return await setCompleteTranslation(userId, translationId).then(function () {
+    return redirect(`/dashboard`);
+  });
+  // }
+  // return json(targetLangTextInput === targetLangText, {
+  //   status: 500,
+  //   statusText: targetLangTextInput,
+  // });
 };
 
 export default function Translate() {
   const data = useLoaderData() as LoaderData;
+  const actionData = useActionData();
 
   const { translation } = data;
 
@@ -66,6 +69,8 @@ export default function Translate() {
   const isSubmissionEnabled =
     targetLangTextInput.length === targetLangText.length;
 
+  console.log({ actionData });
+
   return (
     <Form method="post">
       <div>
@@ -83,23 +88,16 @@ export default function Translate() {
         </div>
       </div>
 
-      <div>
-        <p>{sourceLangText}</p>
+      <div className="cursor-pointer rounded-md bg-blue-800 px-4 py-3 hover:bg-blue-700">
+        <p className="text-white">{sourceLangText}</p>
       </div>
 
-      <div>
+      <div className="px-6 pt-4 pb-2">
         {targetLangTextInputArray.map(function (word, idx) {
           return (
             <span
               key={idx}
-              style={{
-                margin: "8px",
-                padding: "12px",
-                backgroundColor: "blue",
-                color: "white",
-                border: "2px solid blue",
-                borderRadius: "4px",
-              }}
+              className="mr-2 mb-2 inline-block rounded-full bg-blue-700 px-3 py-1 text-sm font-semibold text-white hover:cursor-pointer hover:bg-blue-500 hover:text-white"
               onClick={function () {
                 setTargetLangTextInputArray(function (prevState) {
                   const newArray = [
@@ -118,22 +116,12 @@ export default function Translate() {
         })}
       </div>
 
-      <div>
+      <div className="px-6 pt-4 pb-2">
         {targetLangTextSplitString.map(function (word, idx) {
           return (
             <span
               key={idx}
-              style={{
-                margin: "8px",
-                padding: "12px",
-                border: "2px solid blue",
-                borderRadius: "4px",
-                ...(targetLangTextInputArray.includes(word) && {
-                  backgroundColor: "grey",
-                  color: "grey",
-                  border: "2px solid grey",
-                }),
-              }}
+              className="mr-2 mb-2 inline-block rounded-full bg-gray-200 px-3 py-1 text-sm font-semibold text-gray-700 hover:cursor-pointer hover:bg-blue-700 hover:text-white"
               onClick={() => {
                 setTargetLangTextInputArray(function (prevState) {
                   if (prevState.includes(word)) {
@@ -154,6 +142,10 @@ export default function Translate() {
       </div>
 
       <div>
+        <p>{actionData?.status}</p>
+      </div>
+
+      <div className="px-6 pt-4 pb-2">
         <input type="hidden" name="userId" value={userId} />
         <input type="hidden" name="translationId" value={id} />
         <input type="hidden" name="targetLangText" value={targetLangText} />
@@ -164,13 +156,9 @@ export default function Translate() {
         />
         <input
           type="submit"
+          className="diabled:text-gray-700 w-full rounded-full bg-blue-500 py-2 px-4 font-bold text-white hover:cursor-pointer hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-700"
           value="Check"
           disabled={!isSubmissionEnabled}
-          style={{
-            margin: "24px",
-            fontWeight: "bold",
-            color: isSubmissionEnabled ? "green" : "red",
-          }}
         />
       </div>
     </Form>
