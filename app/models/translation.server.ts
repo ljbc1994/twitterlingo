@@ -29,8 +29,10 @@ interface DatabaseTranslationItem extends TranslationItem {
   completed: boolean;
 }
 
-const skToId = (sk: TranslationItem["sk"]): Translation["id"] => sk.replace(/^translation#/, "");
-const idToSk = (id: Translation["id"]): TranslationItem["sk"] => `translation#${id}`;
+const skToId = (sk: TranslationItem["sk"]): Translation["id"] =>
+  sk.replace(/^translation#/, "");
+const idToSk = (id: Translation["id"]): TranslationItem["sk"] =>
+  `translation#${id}`;
 
 function mapFromDatabaseToModel(dbModel: DatabaseTranslationItem): Translation {
   return {
@@ -60,7 +62,9 @@ export async function getTranslation({
   return null;
 }
 
-export async function getTranslationListItems(userId: Translation['userId']): Promise<Array<Translation>> {
+export async function getTranslationListItems(
+  userId: Translation["userId"]
+): Promise<Array<Translation>> {
   const db = await arc.tables();
 
   const result = await db.translation.query({
@@ -68,10 +72,14 @@ export async function getTranslationListItems(userId: Translation['userId']): Pr
     ExpressionAttributeValues: { ":pk": userId },
   });
 
-  return result.Items.map((item: DatabaseTranslationItem) => mapFromDatabaseToModel(item));
+  return result.Items.map((item: DatabaseTranslationItem) =>
+    mapFromDatabaseToModel(item)
+  );
 }
 
-export async function createTranslation(translation: Omit<Translation, "id">): Promise<Translation> {
+export async function createTranslation(
+  translation: Omit<Translation, "id">
+): Promise<Translation> {
   const db = await arc.tables();
 
   const result = await db.translation.put({
@@ -90,15 +98,15 @@ export async function createTranslation(translation: Omit<Translation, "id">): P
 
 export async function setCompleteTranslation(
   userId: User["id"],
-  translationId: Translation['id']
+  translationId: Translation["id"]
 ) {
   try {
     const db = await arc.tables();
 
-    const translation = await getTranslation({ 
+    const translation = await getTranslation({
       id: translationId,
-      userId 
-    })
+      userId,
+    });
 
     if (translation == null) {
       return false;
@@ -112,7 +120,7 @@ export async function setCompleteTranslation(
       targetLangText: translation.targetLangText,
       sourceLangCode: translation.sourceLangCode,
       targetLangCode: translation.targetLangCode,
-      complete: true,
+      completed: true,
     });
 
     return true;
@@ -121,7 +129,10 @@ export async function setCompleteTranslation(
   }
 }
 
-export async function deleteTranslation({ id, userId }: Pick<Translation, "id" | "userId">) {
+export async function deleteTranslation({
+  id,
+  userId,
+}: Pick<Translation, "id" | "userId">) {
   const db = await arc.tables();
   return db.note.delete({ pk: userId, sk: idToSk(id) });
 }
