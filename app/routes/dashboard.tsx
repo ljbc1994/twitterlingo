@@ -110,9 +110,13 @@ export default function Dashboard() {
       </nav>
       
       <main className="container mx-auto px-4">
-        <div>
-          <button onClick={() => setShowCompleted(false)}>To-do</button>
-          <button onClick={() => setShowCompleted(true)}>Completed</button>
+        <div className="py-4 grid gap-2 grid-cols-2">
+          <button className="text-blue-200 p-2 hover:bg-blue-800 rounded-md" onClick={() => setShowCompleted(false)}>
+            Todo 👀
+          </button>
+          <button className="text-blue-200 p-2 hover:bg-blue-800 rounded-md" onClick={() => setShowCompleted(true)}>
+            Done ✅
+          </button>
         </div>
 
         {data.translations.length > 0 ? (
@@ -127,7 +131,7 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-          <div>No bookmarks saved. You can bookmark a tweet to see it here.</div>
+          <p className="text-white text-center">No bookmarks saved. You can bookmark a tweet to see it here.</p>
         )}
       </main>
     </div>
