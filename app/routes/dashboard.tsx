@@ -20,11 +20,7 @@ type LoaderData = {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await getUser(request);
-  const translations = [
-    { sourceLangText: 'this is an example tweet sdfsd' },
-    { sourceLangText: 'this is an example tweet whaaaaasdfdsaaaat' },
-    { sourceLangText: 'this is an example tweet whaaaaaaasdfdfsaat' }
-  ]
+  const translations = await getTranslationsByUser(user!.id, user!.accessToken);
 
   return json<LoaderData>({ translations, user });
 };
