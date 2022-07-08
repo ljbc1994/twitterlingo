@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { useState, useMemo } from "react";
+import { Form, Link, useActionData, useLoaderData, useSubmit } from "@remix-run/react";
 import {
   ActionFunction,
   json,
@@ -66,19 +66,28 @@ export let action: ActionFunction = async ({ request }) => {
 export default function Translate() {
   const data = useLoaderData() as LoaderData;
   const actionData = useActionData();
+  const submit = useSubmit();
+
+  const [highlightState, setHighlightState] = useState<boolean[]>([])
 
   const { translation, user } = data;
 
   const { id, userId, sourceLangCode, targetLangCode, targetLangText } =
     translation!;
 
-  const targetLangTextSplitString: string[] = data.jumbledTargetLangText
+  const targetLangTextSplitString = data.jumbledTargetLangText.map((word, idx) => ({ word, idx }))
 
   const [targetLangTextInputArray, setTargetLangTextInputArray] = useState<
-    string[]
+    { word: string, idx: number }[]
   >([]);
 
-  const [targetLangTextInput, setTargetLangTextInput] = useState<string>("");
+  const targetLangTextInput = useMemo(() => {
+    return targetLangTextInputArray.join(' ')
+  }, [targetLangTextInputArray])
+
+  const filteredTargetLangTextSplitString = useMemo(() => {
+    return targetLangTextSplitString.filter(({ idx }) => !targetLangTextInputArray.some((x) => x.idx === idx))
+  }, [targetLangTextSplitString, targetLangTextInputArray])
 
   function getLanguageNameFromLangCode(langCode: string) {
     const [language] = languages.filter(function (l) {
@@ -87,13 +96,38 @@ export default function Translate() {
     return language.name;
   }
 
+  function onCheckAnswer(evt: any) {
+    if (targetLangTextInput === targetLangText) {
+      submit(evt.currentTarget)
+      return
+    }
+    highlightAnswer()
+  }
+
+  function highlightAnswer() {
+    const target = translation!.targetLangText.split(' ')
+    const highlight = targetLangTextInputArray.map((input, index) => {
+      return input.word === target[index]
+    })
+    setHighlightState(highlight)
+    setTimeout(() => {
+      setHighlightState([])
+    }, 1000);
+  }
+
+  function getHighlightClass(index: number) {
+    switch (highlightState[index]) {
+      case true:
+        return "bg-green-800"
+      case false:
+        return "bg-red-800"
+      default:
+        return "";
+    }
+  }
+
   const sourceLangAlt = getLanguageNameFromLangCode(sourceLangCode);
   const targetLangAlt = getLanguageNameFromLangCode(targetLangCode);
-
-  useEffect(() => {
-    setTargetLangTextInputArray([]);
-    setTargetLangTextInput("");
-  }, [actionData]);
 
   return (
     <div className="relative min-h-screen bg-blue-900">
@@ -139,22 +173,15 @@ export default function Translate() {
         </div>
 
         <div className="px-6 pt-4 pb-2">
-          {targetLangTextInputArray.map(function (word, idx) {
+          {targetLangTextInputArray.map(function ({ word, idx }, index) {
             return (
               <span
-                key={idx}
-                className="mr-2 mb-2 inline-block rounded-full rounded-md bg-blue-800  px-3 py-1 text-sm text-white hover:cursor-pointer hover:bg-blue-700"
-                onClick={function () {
-                  setTargetLangTextInputArray(function (prevState) {
-                    const newArray = [
-                      ...prevState.filter(function (item, _idx) {
-                        // return prevState[idx] !== prevState[_idx];
-                        return item !== word;
-                      }),
-                    ];
-                    setTargetLangTextInput(newArray.join(" "));
-                    return newArray;
-                  });
+                key={index}
+                className={`mr-2 mb-2 inline-block rounded-full rounded-md bg-blue-800  px-3 py-1 text-sm text-white hover:cursor-pointer hover:bg-blue-700 transition-colors ease-in-out duration-500 ${getHighlightClass(index)}`}
+                onClick={() => {
+                  setTargetLangTextInputArray((prevState) => {
+                    return prevState.filter((val) => val.idx !== idx)
+                  })
                 }}
               >
                 {word}
@@ -164,28 +191,18 @@ export default function Translate() {
         </div>
 
         <div className="px-6 pt-4 pb-2">
-          {targetLangTextSplitString.map(function (word, idx) {
+          {filteredTargetLangTextSplitString.map(function (val, idx) {
             return (
               <span
                 key={idx}
-                className={`${
-                  targetLangTextInputArray.includes(word, idx)
-                    ? "hidden"
-                    : "inline-block"
-                } mr-2 mb-2 inline-block rounded-full rounded-md bg-gray-200  px-3 py-1 text-sm text-gray-700 hover:cursor-pointer hover:bg-blue-700 hover:text-white`}
+                className={`mr-2 mb-2 inline-block rounded-full rounded-md bg-gray-200  px-3 py-1 text-sm text-gray-700 hover:cursor-pointer hover:bg-blue-700 hover:text-white`}
                 onClick={() => {
-                  setTargetLangTextInputArray(function (prevState) {
-                    if (prevState.includes(word, idx)) {
-                      return prevState;
-                    }
-
-                    const newArray = [...prevState, word];
-                    setTargetLangTextInput(newArray.join(" "));
-                    return newArray;
-                  });
+                  setTargetLangTextInputArray((prevState) => {
+                    return prevState.concat([val])
+                  })
                 }}
               >
-                {word}
+                {val.word}
               </span>
             );
           })}
@@ -215,11 +232,13 @@ export default function Translate() {
               name="targetLangTextInput"
               value={targetLangTextInput}
             />
-            <input
-              type="submit"
+            <button
+              type="button"
               className="w-full rounded-full bg-blue-500 py-2 px-4 text-white hover:cursor-pointer hover:bg-blue-700"
-              value="Check"
-            />
+              onClick={onCheckAnswer}
+            >
+              Check
+            </button>
             <div className="flex justify-center mt-5">
               <Link
                 className="mx-auto w-full px-4 text-white hover:underline text-center"

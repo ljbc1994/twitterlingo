@@ -67,6 +67,7 @@ export default function Dashboard() {
     event: React.ChangeEvent<HTMLSelectElement>
   ) {
     try {
+      setSourceLangPreference(event.target.value);
       await fetch("/user/preference", {
         method: "POST",
         body: JSON.stringify({ sourceLangPreference: event.target.value }),
@@ -74,7 +75,6 @@ export default function Dashboard() {
           "Content-Type": "application/json",
         },
       });
-      setSourceLangPreference(event.target.value);
     } catch (err) {}
   }
 
