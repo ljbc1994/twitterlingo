@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { Form, Link, useLoaderData } from "@remix-run/react";
-import { json, LoaderFunction } from "@remix-run/server-runtime";
-import { getTranslation } from "~/models/translation.server";
+import {
+  ActionFunction,
+  json,
+  LoaderFunction,
+  redirect,
+} from "@remix-run/server-runtime";
+import {
+  getTranslation,
+  setCompleteTranslation,
+} from "~/models/translation.server";
 import { getUser } from "~/services/session.server";
 
 type LoaderData = {
@@ -17,38 +25,49 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   return json<LoaderData>({ translation: translation! });
 };
 
+export let action: ActionFunction = async ({ request }) => {
+  const form = await request.formData();
+  const userId = form.get("userId") as string;
+  const translationId = form.get("translationId") as string;
+  const targetLangText = form.get("targetLangText") as string;
+  const targetLangTextInput = form.get("targetLangTextInput") as string;
+
+  console.log({ targetLangText, targetLangTextInput });
+  if (targetLangTextInput === targetLangText) {
+    await setCompleteTranslation(userId, translationId).then(function () {
+      return redirect(`/dashboard`);
+    });
+  }
+  return redirect(`/translate/${translationId}`);
+};
+
 export default function Translate() {
   const data = useLoaderData() as LoaderData;
-  // const data = {
-  //   translation: {
-  //     bookmarkId: "1544768821873020930",
-  //     completed: false,
-  //     id: null,
-  //     sourceLangCode: "en",
-  //     sourceLangText:
-  //       "Votre muscle le plus fort et votre pire ennemi est votre esprit. Entraînez-le bien.",
-  //     targetLangCode: "fr",
-  //     targetLangText:
-  //       "Your strongest muscle and worst enemy is your mind. Train it well.",
-  //     userId: "id#1540354283811610626",
-  //   },
-  // };
 
   const { translation } = data;
 
-  const { sourceLangCode, sourceLangText, targetLangCode, targetLangText } =
-    translation!;
+  const {
+    id,
+    userId,
+    sourceLangCode,
+    sourceLangText,
+    targetLangCode,
+    targetLangText,
+  } = translation!;
 
   const targetLangTextSplitString: string[] = targetLangText.split(" ");
 
-  const [target, setTarget] = useState<string[]>([]);
+  const [targetLangTextInputArray, setTargetLangTextInputArray] = useState<
+    string[]
+  >([]);
 
-  const isSubmissionEnabled = target.length === targetLangText.length;
+  const [targetLangTextInput, setTargetLangTextInput] = useState<string>("");
 
-  function handleSubmit() {}
+  const isSubmissionEnabled =
+    targetLangTextInput.length === targetLangText.length;
 
   return (
-    <Form>
+    <Form method="post">
       <div>
         <div>
           {/* <Link to={`/translate:${}`}>Prev</Link> */}
@@ -69,7 +88,7 @@ export default function Translate() {
       </div>
 
       <div>
-        {target.map(function (word, idx) {
+        {targetLangTextInputArray.map(function (word, idx) {
           return (
             <span
               key={idx}
@@ -82,12 +101,14 @@ export default function Translate() {
                 borderRadius: "4px",
               }}
               onClick={function () {
-                setTarget(function (prevState) {
-                  return [
+                setTargetLangTextInputArray(function (prevState) {
+                  const newArray = [
                     ...prevState.filter(function (item) {
                       return item !== word;
                     }),
                   ];
+                  setTargetLangTextInput(newArray.join(" "));
+                  return newArray;
                 });
               }}
             >
@@ -107,20 +128,24 @@ export default function Translate() {
                 padding: "12px",
                 border: "2px solid blue",
                 borderRadius: "4px",
-                ...(target.includes(word) && {
+                ...(targetLangTextInputArray.includes(word) && {
                   backgroundColor: "grey",
                   color: "grey",
                   border: "2px solid grey",
                 }),
               }}
-              onClick={() =>
-                setTarget(function (prevState) {
+              onClick={() => {
+                setTargetLangTextInputArray(function (prevState) {
                   if (prevState.includes(word)) {
                     return prevState;
                   }
-                  return [...prevState, word];
-                })
-              }
+
+                  const newArray = [...prevState, word];
+                  setTargetLangTextInput(newArray.join(" "));
+                  return newArray;
+                });
+                setTargetLangTextInput(targetLangTextInputArray.join(" "));
+              }}
             >
               {word}
             </span>
@@ -129,7 +154,24 @@ export default function Translate() {
       </div>
 
       <div>
-        <input type="submit" value="Check" disabled={!isSubmissionEnabled} />
+        <input type="hidden" name="userId" value={userId} />
+        <input type="hidden" name="translationId" value={id} />
+        <input type="hidden" name="targetLangText" value={targetLangText} />
+        <input
+          type="hidden"
+          name="targetLangTextInput"
+          value={targetLangTextInput}
+        />
+        <input
+          type="submit"
+          value="Check"
+          disabled={!isSubmissionEnabled}
+          style={{
+            margin: "24px",
+            fontWeight: "bold",
+            color: isSubmissionEnabled ? "green" : "red",
+          }}
+        />
       </div>
     </Form>
   );
