@@ -18,7 +18,19 @@ import { languages } from "~/constants/languages";
 type LoaderData = {
   translation: Awaited<ReturnType<typeof getTranslation>>;
   user: SessionUser | null;
+  jumbledTargetLangText: string[];
 };
+
+function shuffle(arr: any[]) {
+  var j, x, index;
+  for (index = arr.length - 1; index > 0; index--) {
+    j = Math.floor(Math.random() * (index + 1));
+    x = arr[index];
+    arr[index] = arr[j];
+    arr[j] = x;
+  }
+  return arr;
+}
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const user = await getUser(request);
@@ -26,7 +38,11 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     userId: user!.id,
     id: params.translateId!,
   });
-  return json<LoaderData>({ translation: translation!, user });
+  return json<LoaderData>({
+    translation: translation!,
+    user,
+    jumbledTargetLangText: shuffle(translation?.targetLangText.split(' ') ?? []),
+  });
 };
 
 export let action: ActionFunction = async ({ request }) => {
@@ -56,7 +72,7 @@ export default function Translate() {
   const { id, userId, sourceLangCode, targetLangCode, targetLangText } =
     translation!;
 
-  const targetLangTextSplitString: string[] = targetLangText.split(" ");
+  const targetLangTextSplitString: string[] = data.jumbledTargetLangText
 
   const [targetLangTextInputArray, setTargetLangTextInputArray] = useState<
     string[]
