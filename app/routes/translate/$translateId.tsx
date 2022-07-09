@@ -117,6 +117,13 @@ export default function Translate() {
     }, 1000);
   }
 
+  function speak(value: string, lang = targetLangCode) {
+    const message = new SpeechSynthesisUtterance();
+    message.text = value;
+    message.lang = lang;
+    window.speechSynthesis.speak(message);
+  }
+
   function getHighlightClass(index: number) {
     switch (highlightState[index]) {
       case true:
@@ -164,17 +171,25 @@ export default function Translate() {
       </nav>
 
       <main className="container mx-auto px-4">
-        <div className="px-6 pt-4 pb-2">
-          <div className="grid gap-3">
+        <div className="px-6 pt-4 pb-3">
+          <div className="grid">
             <TranslationItem
               key={id}
               translation={translation!}
               targetLang={targetLangCode}
             />
           </div>
+          <div className="pt-3 grid gap-3 grid-cols-2" style={{ maxWidth: 300 }}>
+            <button className="text-white text-sm bg-blue-500 hover:bg-blue-600 rounded-md px-3 py-1" onClick={() => speak(translation!.sourceLangText, sourceLangCode)}>
+              Hear in {sourceLangAlt}
+            </button>
+            <button className="text-white text-sm bg-blue-500 hover:bg-blue-600 rounded-md px-3 py-1" onClick={() => speak(translation!.targetLangText)}>
+              Hear in {targetLangAlt}
+            </button>
+          </div>
         </div>
 
-        <div className="px-6 pt-4 pb-2">
+        <div className={`px-6 pb-2 ${targetLangTextInputArray.length > 0 ? 'pt-4' : 'pt-0'}`}>
           {targetLangTextInputArray.map(function ({ word, idx }, index) {
             return (
               <span
@@ -202,6 +217,7 @@ export default function Translate() {
                   setTargetLangTextInputArray((prevState) => {
                     return prevState.concat([val])
                   })
+                  speak(val.word)
                 }}
               >
                 {val.word}
