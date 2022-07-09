@@ -10,9 +10,12 @@ const TranslationItem = ({ translation, targetLang }: { translation: Translation
   }
 
   return (
-    <Form ref={formRef} method="post" className="px-4 py-3 rounded-md bg-blue-800 hover:bg-blue-700 cursor-pointer" onClick={onItemClick}>
+    <Form ref={formRef} method="post" className="px-4 py-3 rounded-md bg-blue-800 hover:bg-blue-700 transition cursor-pointer" onClick={onItemClick}>
       <div className="flex">
-        <img className="rounded-md self-center mr-4 shadow-lg" alt="flag" src={`/_static/icons/${translation.sourceLangCode.toUpperCase()}.svg`} />
+        <div className="grid grid-cols-2 gap-1 mr-2" style={{ minWidth: 100 }}>
+          <img className="rounded-md self-center mr-4 shadow-lg" alt="flag" src={`/_static/icons/${translation.sourceLangCode.toUpperCase()}.svg`} />
+          <img className="rounded-md self-center mr-4 shadow-lg" alt="flag" src={`/_static/icons/${(translation.targetLangCode || targetLang).toUpperCase()}.svg`} />
+        </div>
         <div>
           <input type="hidden" name="id" value={translation.id} />
           <input type="hidden" name="bookmarkId" value={translation.bookmarkId} />

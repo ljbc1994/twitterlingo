@@ -44,7 +44,7 @@ export async function getTranslationsByUser(
             sourceLangText: sanitizeTweet(item.text),
             targetLangText: "",
             sourceLangCode: item.lang,
-            targetLangCode: user?.sourceLangPreference ?? "en",
+            targetLangCode: "",
             completed: false,
           };
 

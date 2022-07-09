@@ -82,7 +82,7 @@ export default function Translate() {
   >([]);
 
   const targetLangTextInput = useMemo(() => {
-    return targetLangTextInputArray.join(' ')
+    return targetLangTextInputArray.map(({ word }) => word).join(' ')
   }, [targetLangTextInputArray])
 
   const filteredTargetLangTextSplitString = useMemo(() => {
@@ -97,7 +97,9 @@ export default function Translate() {
   }
 
   function onCheckAnswer(evt: any) {
+    console.log({ targetLangTextInput, targetLangText })
     if (targetLangTextInput === targetLangText) {
+      console.log('answer')
       submit(evt.currentTarget)
       return
     }

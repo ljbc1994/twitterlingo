@@ -4,7 +4,6 @@ import { Form, Link, Outlet, useLoaderData, useSubmit } from "@remix-run/react";
 import { useMemo, useState } from "react";
 import TranslationItem from "~/components/dashboard/TranslationItem";
 import { languages } from "~/constants/languages";
-import { Translation } from "~/models/translation.server";
 import { SessionUser } from "~/models/user.server";
 
 import { getUser } from "~/services/session.server";
@@ -20,6 +19,11 @@ type LoaderData = {
 
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await getUser(request);
+
+  if (user?.id == null) {
+    return redirect('/')
+  }
+
   const translations = await getTranslationsByUser(user!.id, user!.accessToken);
 
   return json<LoaderData>({ translations, user });
@@ -39,7 +43,7 @@ export let action: ActionFunction = async ({ request }) => {
     const result = await createTranslationForUser(user!.id, {
       bookmarkId,
       sourceLangCode: sourceLangCode,
-      targetLangCode: targetLangCode ?? user?.sourceLangPreference,
+      targetLangCode: targetLangCode,
       sourceLangText: text,
     });
     return redirect(`/translate/${result.id}`);
@@ -57,10 +61,10 @@ export default function Dashboard() {
   );
 
   const translations = useMemo(() => {
-    if (showCompleted) {
-      return data.translations.filter((translation) => translation.completed);
+    return {
+      completed: data.translations.filter((translation) => translation.completed),
+      incomplete: data.translations.filter((translation) => !translation.completed)
     }
-    return data.translations.filter((translation) => !translation.completed);
   }, [showCompleted]);
 
   async function onPreferredLanguageChange(
@@ -113,18 +117,18 @@ export default function Dashboard() {
       
       <main className="container mx-auto px-4">
         <div className="py-4 grid gap-2 grid-cols-2">
-          <button className={`text-blue-200 p-2 hover:bg-blue-800 rounded-md ${!showCompleted && 'bg-blue-700'}`} onClick={() => setShowCompleted(false)}>
-            Todo 👀
+          <button className={`relative text-blue-200 p-2 hover:bg-blue-800 rounded-md ${!showCompleted && 'bg-blue-700'}`} onClick={() => setShowCompleted(false)}>
+            Todo 👀 <span className="ml-2 text-white bg-red-600 py-1 px-2 rounded-md">{translations.incomplete.length}</span>
           </button>
           <button className={`text-blue-200 p-2 hover:bg-blue-800 rounded-md ${showCompleted && 'bg-blue-700'}`} onClick={() => setShowCompleted(true)}>
-            Done ✅
+            Done ✅ <span className="ml-2 text-white bg-green-600 py-1 px-2 rounded-md">{translations.completed.length}</span>
           </button>
         </div>
 
         {data.translations.length > 0 ? (
           <div>
             <div className="grid gap-3">
-              {translations.map((translation) => (
+              {(showCompleted ? translations.completed : translations.incomplete).map((translation) => (
                 <TranslationItem
                   translation={translation}
                   targetLang={sourceLangPreference}
