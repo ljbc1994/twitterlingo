@@ -11,6 +11,8 @@ import {
   createTranslationForUser,
   getTranslationsByUser,
 } from "~/services/translation.server";
+import getFlagCodeFromLangCode from "~/utils/getFlagCodeFromLangCode";
+import getFlagIconPath from "~/utils/getFlagIconPath";
 
 type LoaderData = {
   translations: Awaited<ReturnType<typeof getTranslationsByUser>>;
@@ -92,7 +94,7 @@ export default function Dashboard() {
             </div>
             <div className="flex">
               <div className="self-center mr-3">
-                <img className="rounded-md" src={`/_static/icons/${sourceLangPreference.toUpperCase()}.svg`} />
+                <img className="rounded-md" src={getFlagIconPath(getFlagCodeFromLangCode(sourceLangPreference))} alt="flag" />
               </div>
               <select
                 className="rounded-md border border-blue-400 px-3 py-2 self-center bg-blue-900 text-blue-300"
@@ -132,6 +134,7 @@ export default function Dashboard() {
                 <TranslationItem
                   translation={translation}
                   targetLang={sourceLangPreference}
+                  showFlags={true}
                   key={translation.bookmarkId}
                 />
               ))}
