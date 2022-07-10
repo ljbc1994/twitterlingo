@@ -1,19 +1,23 @@
 import { useState, useMemo } from "react";
-import { Form, Link, useActionData, useLoaderData, useSubmit } from "@remix-run/react";
 import {
-  ActionFunction,
-  json,
-  LoaderFunction,
-  redirect,
-} from "@remix-run/server-runtime";
+  Form,
+  Link,
+  useActionData,
+  useLoaderData,
+  useSubmit,
+} from "@remix-run/react";
+import { json, redirect } from "@remix-run/server-runtime";
+import type { ActionFunction, LoaderFunction } from "@remix-run/server-runtime";
 import {
   getTranslation,
   setCompleteTranslation,
 } from "~/models/translation.server";
 import { getUser } from "~/services/session.server";
 import TranslationItem from "~/components/dashboard/TranslationItem";
-import { SessionUser } from "~/models/user.server";
+import type { SessionUser } from "~/models/user.server";
 import { languages } from "~/constants/languages";
+import getFlagIconPath from "~/utils/getFlagIconPath";
+import getFlagCodeFromLangCode from "~/utils/getFlagCodeFromLangCode";
 
 type LoaderData = {
   translation: Awaited<ReturnType<typeof getTranslation>>;
@@ -41,7 +45,9 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   return json<LoaderData>({
     translation: translation!,
     user,
-    jumbledTargetLangText: shuffle(translation?.targetLangText.split(' ') ?? []),
+    jumbledTargetLangText: shuffle(
+      translation?.targetLangText.split(" ") ?? []
+    ),
   });
 };
 
@@ -68,26 +74,30 @@ export default function Translate() {
   const actionData = useActionData();
   const submit = useSubmit();
 
-  const [highlightState, setHighlightState] = useState<boolean[]>([])
+  const [highlightState, setHighlightState] = useState<boolean[]>([]);
 
   const { translation, user } = data;
 
   const { id, userId, sourceLangCode, targetLangCode, targetLangText } =
     translation!;
 
-  const targetLangTextSplitString = data.jumbledTargetLangText.map((word, idx) => ({ word, idx }))
+  const targetLangTextSplitString = data.jumbledTargetLangText.map(
+    (word, idx) => ({ word, idx })
+  );
 
   const [targetLangTextInputArray, setTargetLangTextInputArray] = useState<
-    { word: string, idx: number }[]
+    { word: string; idx: number }[]
   >([]);
 
   const targetLangTextInput = useMemo(() => {
-    return targetLangTextInputArray.map(({ word }) => word).join(' ')
-  }, [targetLangTextInputArray])
+    return targetLangTextInputArray.map(({ word }) => word).join(" ");
+  }, [targetLangTextInputArray]);
 
   const filteredTargetLangTextSplitString = useMemo(() => {
-    return targetLangTextSplitString.filter(({ idx }) => !targetLangTextInputArray.some((x) => x.idx === idx))
-  }, [targetLangTextSplitString, targetLangTextInputArray])
+    return targetLangTextSplitString.filter(
+      ({ idx }) => !targetLangTextInputArray.some((x) => x.idx === idx)
+    );
+  }, [targetLangTextSplitString, targetLangTextInputArray]);
 
   function getLanguageNameFromLangCode(langCode: string) {
     const [language] = languages.filter(function (l) {
@@ -97,23 +107,23 @@ export default function Translate() {
   }
 
   function onCheckAnswer(evt: any) {
-    console.log({ targetLangTextInput, targetLangText })
+    console.log({ targetLangTextInput, targetLangText });
     if (targetLangTextInput === targetLangText) {
-      console.log('answer')
-      submit(evt.currentTarget)
-      return
+      console.log("answer");
+      submit(evt.currentTarget);
+      return;
     }
-    highlightAnswer()
+    highlightAnswer();
   }
 
   function highlightAnswer() {
-    const target = translation!.targetLangText.split(' ')
+    const target = translation!.targetLangText.split(" ");
     const highlight = targetLangTextInputArray.map((input, index) => {
-      return input.word === target[index]
-    })
-    setHighlightState(highlight)
+      return input.word === target[index];
+    });
+    setHighlightState(highlight);
     setTimeout(() => {
-      setHighlightState([])
+      setHighlightState([]);
     }, 1000);
   }
 
@@ -127,9 +137,9 @@ export default function Translate() {
   function getHighlightClass(index: number) {
     switch (highlightState[index]) {
       case true:
-        return "bg-green-800"
+        return "bg-green-800";
       case false:
-        return "bg-red-800"
+        return "bg-red-800";
       default:
         return "";
     }
@@ -154,14 +164,14 @@ export default function Translate() {
               <div className="mr-3 self-center">
                 <img
                   className="rounded-md"
-                  src={`/_static/icons/${sourceLangCode}.svg`}
+                  src={getFlagIconPath(getFlagCodeFromLangCode(sourceLangCode))}
                   alt={sourceLangAlt}
                 />
               </div>
               <div className="mr-3 self-center">
                 <img
                   className="rounded-md"
-                  src={`/_static/icons/${targetLangCode}.svg`}
+                  src={getFlagIconPath(getFlagCodeFromLangCode(targetLangCode))}
                   alt={targetLangAlt}
                 />
               </div>
@@ -179,26 +189,41 @@ export default function Translate() {
               targetLang={targetLangCode}
             />
           </div>
-          <div className="pt-3 grid gap-3 grid-cols-2" style={{ maxWidth: 300 }}>
-            <button className="text-white text-sm bg-blue-500 hover:bg-blue-600 rounded-md px-3 py-1" onClick={() => speak(translation!.sourceLangText, sourceLangCode)}>
+          <div
+            className="grid grid-cols-2 gap-3 pt-3"
+            style={{ maxWidth: 300 }}
+          >
+            <button
+              className="rounded-md bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+              onClick={() => speak(translation!.sourceLangText, sourceLangCode)}
+            >
               Hear in {sourceLangAlt}
             </button>
-            <button className="text-white text-sm bg-blue-500 hover:bg-blue-600 rounded-md px-3 py-1" onClick={() => speak(translation!.targetLangText)}>
+            <button
+              className="rounded-md bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
+              onClick={() => speak(translation!.targetLangText)}
+            >
               Hear in {targetLangAlt}
             </button>
           </div>
         </div>
 
-        <div className={`px-6 pb-2 ${targetLangTextInputArray.length > 0 ? 'pt-4' : 'pt-0'}`}>
+        <div
+          className={`px-6 pb-2 ${
+            targetLangTextInputArray.length > 0 ? "pt-4" : "pt-0"
+          }`}
+        >
           {targetLangTextInputArray.map(function ({ word, idx }, index) {
             return (
               <span
                 key={index}
-                className={`mr-2 mb-2 inline-block rounded-full rounded-md bg-blue-800  px-3 py-1 text-sm text-white hover:cursor-pointer hover:bg-blue-700 transition-colors ease-in-out duration-500 ${getHighlightClass(index)}`}
+                className={`mr-2 mb-2 inline-block rounded-full rounded-md bg-blue-800  px-3 py-1 text-sm text-white transition-colors duration-500 ease-in-out hover:cursor-pointer hover:bg-blue-700 ${getHighlightClass(
+                  index
+                )}`}
                 onClick={() => {
                   setTargetLangTextInputArray((prevState) => {
-                    return prevState.filter((val) => val.idx !== idx)
-                  })
+                    return prevState.filter((val) => val.idx !== idx);
+                  });
                 }}
               >
                 {word}
@@ -215,9 +240,9 @@ export default function Translate() {
                 className={`mr-2 mb-2 inline-block rounded-full rounded-md bg-gray-200  px-3 py-1 text-sm text-gray-700 hover:cursor-pointer hover:bg-blue-700 hover:text-white`}
                 onClick={() => {
                   setTargetLangTextInputArray((prevState) => {
-                    return prevState.concat([val])
-                  })
-                  speak(val.word)
+                    return prevState.concat([val]);
+                  });
+                  speak(val.word);
                 }}
               >
                 {val.word}
@@ -227,7 +252,7 @@ export default function Translate() {
         </div>
 
         <Form method="post">
-          {actionData && (
+          {actionData ? (
             <div className="px-6 pt-4 pb-2">
               <div className="cursor-pointer rounded-md bg-red-800 px-4 py-3 hover:bg-blue-700">
                 <div className="flex">
@@ -239,7 +264,7 @@ export default function Translate() {
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
           <div className="px-6 pt-4 pb-2">
             <input type="hidden" name="userId" value={userId} />
@@ -257,9 +282,9 @@ export default function Translate() {
             >
               Check
             </button>
-            <div className="flex justify-center mt-5">
+            <div className="mt-5 flex justify-center">
               <Link
-                className="mx-auto w-full px-4 text-white hover:underline text-center"
+                className="mx-auto w-full px-4 text-center text-white hover:underline"
                 to="/dashboard"
               >
                 Return to dashboard
