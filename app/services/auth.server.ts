@@ -11,6 +11,7 @@ export let authenticator = new Authenticator<User>(sessionStorage);
 
 const clientID = process.env.TWITTER_CONSUMER_KEY;
 const clientSecret = process.env.TWITTER_CONSUMER_SECRET;
+const baseUrl = process.env.WEBSITE_BASE_URL;
 
 if (!clientID || !clientSecret) {
   throw new Error(
@@ -25,7 +26,7 @@ authenticator.use(
       tokenURL: "https://api.twitter.com/2/oauth2/token",
       clientID,
       clientSecret,
-      callbackURL: "http://localhost:3000/login/callback",
+      callbackURL: `${baseUrl}/login/callback`,
       scope: 'bookmark.read tweet.read users.read'
     },
     async ({ accessToken, refreshToken, profile }) => {
