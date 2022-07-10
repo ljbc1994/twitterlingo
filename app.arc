@@ -1,6 +1,9 @@
 @app
 twitterlingo-895b
 
+@aws
+region eu-west-2
+
 @http
 /*
   method any
