@@ -1,6 +1,6 @@
 import { ActionFunction, LoaderFunction, redirect } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Form, Link, Outlet, useLoaderData, useSubmit } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { useMemo, useState } from "react";
 import TranslationItem from "~/components/dashboard/TranslationItem";
 import { languages } from "~/constants/languages";
