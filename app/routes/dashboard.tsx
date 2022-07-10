@@ -1,10 +1,10 @@
+import type { SessionUser } from "~/models/user.server";
 import { ActionFunction, LoaderFunction, redirect } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useMemo, useState } from "react";
 import TranslationItem from "~/components/dashboard/TranslationItem";
 import { languages } from "~/constants/languages";
-import { SessionUser } from "~/models/user.server";
 
 import { getUser } from "~/services/session.server";
 import {
